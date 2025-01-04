@@ -13,7 +13,7 @@ public class AFKManagerConfig : BasePluginConfig
     public bool SpecKickOnlyMovedByPlugin { get; set; } = false;
     public List<string> SpecSkipFlag { get; set; } = [.. new[] { "@css/root", "@css/ban" }];
     public List<string> AfkSkipFlag { get; set; } = [.. new[] { "@css/root", "@css/ban" }];
-    public string PlaySoundName { get; set; } = "ui/panorama/popup_reveal_01";
+    public string PlaySoundName { get; set; } = "sound/ui/beep22.wav";
     public bool SkipWarmup { get; set; } = false;
     public float Timer { get; set; } = 1.0f;
 }

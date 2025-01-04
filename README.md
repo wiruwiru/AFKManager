@@ -29,7 +29,6 @@ The configuration file will be automatically generated when the plugin is first 
 | `PlaySoundName`          | Play a sound after a warning is issued (leave empty to disable).                                  |
 | `SkipWarmup`             | Skip checks during warmup.                                                                        |
 | `Timer`                  | Adjust the timer for player checks (recommended to set to 1 second).                              |
-| `ConfigVersion`          | The version of the configuration file.                                                           |
 
 ## Configuration Example
 Here is an example configuration file:
