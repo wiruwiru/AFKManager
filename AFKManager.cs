@@ -13,7 +13,7 @@ public class AFKManager : BasePlugin, IPluginConfig<AFKManagerConfig>
     #region definitions
     public override string ModuleAuthor => "luca.uy (forked by NiGHT)";
     public override string ModuleName => "AFK Manager";
-    public override string ModuleVersion => "1.0.0";
+    public override string ModuleVersion => "1.0.1";
 
     public required AFKManagerConfig Config { get; set; }
     private CCSGameRules? _gGameRulesProxy;
@@ -34,29 +34,6 @@ public class AFKManager : BasePlugin, IPluginConfig<AFKManagerConfig>
 
         if (@event.Team != 1)
             value.MovedByPlugin = false;
-
-        return HookResult.Continue;
-    }
-
-    [GameEventHandler]
-    public HookResult OnPlayerSpawn(EventPlayerSpawn @event, GameEventInfo info)
-    {
-        var player = @event.Userid;
-        if (player == null || !player.IsValid || player.IsBot)
-            return HookResult.Continue;
-
-        AddTimer(0.2f, () =>
-        {
-            if (player == null || !player.IsValid || player.LifeState != (byte)LifeState_t.LIFE_ALIVE)
-                return;
-
-            if (!_gPlayerInfo.TryGetValue(player.Index, out var data))
-                return;
-
-            data.SpecAfkTime = 0;
-            data.SpecWarningCount = 0;
-            data.MovedByPlugin = false;
-        }, TimerFlags.STOP_ON_MAPCHANGE);
 
         return HookResult.Continue;
     }
