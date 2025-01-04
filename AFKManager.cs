@@ -13,7 +13,7 @@ public class AFKManager : BasePlugin, IPluginConfig<AFKManagerConfig>
     #region definitions
     public override string ModuleAuthor => "luca.uy (forked by NiGHT)";
     public override string ModuleName => "AFK Manager";
-    public override string ModuleVersion => "1.0.1";
+    public override string ModuleVersion => "1.0.2";
 
     public required AFKManagerConfig Config { get; set; }
     private CCSGameRules? _gGameRulesProxy;
