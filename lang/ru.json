@@ -1,0 +1,9 @@
+{
+  "ChatPrefix": "{purple}[AFK]{default} » ",
+  "ChatKickMessage": "{grey}{playerName}{default} был {lime}выкинут{default} за то, что был {darkred}AFK{default}.",
+  "ChatMoveMessage": "{grey}{playerName}{default} был {lime}перемещен{default} в SPEC за то, что был {darkred}AFK{default}.",
+  "ChatKillMessage": "{grey}{playerName}{default} был {lime}убит{default} за то, что был {darkred}AFK{default}.",
+  "ChatWarningKickMessage": "Вы {darkred}неактивны/AFK{default}. Перемещайтесь или вас {lime}выкинут{default} через {lightblue}{timeAmount}{default} секунд.",
+  "ChatWarningMoveMessage": "Вы {darkred}неактивны/AFK{default}. Перемещайтесь или вас {lime}переместят{default} в SPEC через {lightblue}{timeAmount}{default} секунд.",
+  "ChatWarningKillMessage": "Вы {darkred}неактивны/AFK{default}. Перемещайтесь или вас {lime}убьют{default} через {lightblue}{timeAmount}{default} секунд."
+}

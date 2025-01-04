@@ -1,0 +1,9 @@
+﻿{
+  "ChatPrefix": "{purple}[AFK]{default} » ",
+  "ChatKickMessage": "{grey}{playerName}{default} fue {lime}expulsado{default} por estar {darkred}AFK{default}.",
+  "ChatMoveMessage": "{grey}{playerName}{default} fue {lime}movido{default} a SPEC por estar {darkred}AFK{default}.",
+  "ChatKillMessage": "{grey}{playerName}{default} fue {lime}eliminado{default} por estar {darkred}AFK{default}.",
+  "ChatWarningKickMessage": "Estás {darkred}inactivo/AFK{default}. Muévete o serás {lime}expulsado{default} en {lightblue}{timeAmount}{default} segundos.",
+  "ChatWarningMoveMessage": "Estás {darkred}inactivo/AFK{default}. Muévete o serás {lime}movido{default} a SPEC en {lightblue}{timeAmount}{default} segundos.",
+  "ChatWarningKillMessage": "Estás {darkred}inactivo/AFK{default}. Muévete o serás {lime}eliminado{default} en {lightblue}{timeAmount}{default} segundos."
+}

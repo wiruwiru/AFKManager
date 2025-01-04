@@ -1,0 +1,9 @@
+﻿{
+  "ChatPrefix": "{purple}[AFK]{default} » ",
+  "ChatKickMessage": "{grey}{playerName}{default} was {lime}kicked{default} for being {darkred}AFK{default}.",
+  "ChatMoveMessage": "{grey}{playerName}{default} was {lime}moved{default} to SPEC being {darkred}AFK{default}.",
+  "ChatKillMessage": "{grey}{playerName}{default} was {lime}killed{default} for being {darkred}AFK{default}.",
+  "ChatWarningKickMessage": "You're {darkred}Idle/AFK{default}. Move or you'll be {lime}kicked{default} in {lightblue}{timeAmount}{default} seconds.",
+  "ChatWarningMoveMessage": "You're {darkred}Idle/AFK{default}. Move or you'll be {lime}moved{default} to SPEC in {lightblue}{timeAmount}{default} seconds.",
+  "ChatWarningKillMessage": "You're {darkred}Idle/AFK{default}. Move or you'll be {lime}killed{default} in {lightblue}{timeAmount}{default} seconds."
+}
