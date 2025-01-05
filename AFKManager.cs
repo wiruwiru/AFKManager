@@ -13,7 +13,7 @@ public class AFKManager : BasePlugin, IPluginConfig<AFKManagerConfig>
     #region definitions
     public override string ModuleAuthor => "luca.uy (forked by NiGHT)";
     public override string ModuleName => "AFK Manager";
-    public override string ModuleVersion => "1.0.2";
+    public override string ModuleVersion => "1.0.3";
 
     public required AFKManagerConfig Config { get; set; }
     private CCSGameRules? _gGameRulesProxy;
@@ -27,10 +27,6 @@ public class AFKManager : BasePlugin, IPluginConfig<AFKManagerConfig>
 
         if (!_gPlayerInfo.TryGetValue(player.Index, out var value))
             return HookResult.Continue;
-
-        value.SpecAfkTime = 0;
-        value.SpecWarningCount = 0;
-        value.AfkWarningCount = 0;
 
         if (@event.Team != 1)
             value.MovedByPlugin = false;
@@ -67,7 +63,6 @@ public class AFKManager : BasePlugin, IPluginConfig<AFKManagerConfig>
         public int SpecWarningCount { get; set; }
         public float SpecAfkTime { get; set; }
         public bool MovedByPlugin { get; set; }
-
     }
 
     private readonly Dictionary<uint, PlayerInfo> _gPlayerInfo = new();
