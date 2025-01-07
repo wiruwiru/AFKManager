@@ -1,10 +1,10 @@
 # AFKManager
-Simple AFK Manager plugin for CS2 (recommended for retake servers as it doesn't track player position or camera angle, but instead checks player activity such as movement or shooting).
+Simple AFK Manager plugin for CS2 (ideal for retake servers, as it doesn't track player position or camera angle but instead checks if the player is actively using game controls such as WASD, SHIFT, clicks, etc).
 
 ## Installation
 1. Install [CounterStrike Sharp](https://github.com/roflmuffin/CounterStrikeSharp) and [Metamod:Source](https://www.sourcemm.net/downloads.php/?branch=master).
 
-2. Download [AutomaticAds.zip](https://github.com/wiruwiru/AutomaticAds-CS2/releases) from the releases section.
+2. Download [AFKManager.zip](https://github.com/wiruwiru/AFKManager/releases) from the releases section.
 
 3. Unzip the archive and upload it to the game server.
 
