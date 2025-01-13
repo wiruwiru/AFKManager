@@ -1,0 +1,9 @@
+﻿{
+  "ChatPrefix": "{purple}[AFK]{default} » ",
+  "ChatKickMessage": "{grey}{playerName}{default} został {lime}wyrzucony z serwera{default} za bycie {darkred}AFK{default}.",
+  "ChatMoveMessage": "{grey}{playerName}{default} został {lime}przeniesiony{default} do oglądających za bycie {darkred}AFK{default}.",
+  "ChatKillMessage": "{grey}{playerName}{default}zostałwas {lime}zabity{default} za bycie {darkred}AFK{default}.",
+  "ChatWarningKickMessage": "Jesteś {darkred}Idle/AFK{default}. Porusz się albo zostaniesz {lime}wyrzucony{default} w ciągu {lightblue}{timeAmount}{default} sekund.",
+  "ChatWarningMoveMessage": "Jesteś {darkred}Idle/AFK{default}. Porusz się albo zostaniesz {lime}przeniesiony{default} do oglądających w ciągu {lightblue}{timeAmount}{default} sekund.",
+  "ChatWarningKillMessage": "Jesteś {darkred}Idle/AFK{default}. Porusz się albo zostaniesz {lime}zabity{default} w ciągu {lightblue}{timeAmount}{default} sekund."
+}
