@@ -45,7 +45,7 @@ public class AFKManager : BasePlugin, IPluginConfig<AFKManagerConfig>
 
         if (Config.Timer < 0.1f)
         {
-            Config.Timer = 5.0f;
+            Config.Timer = 1.0f;
         }
 
         if (Config.SpecWarnInterval < Config.Timer)
@@ -148,14 +148,17 @@ public class AFKManager : BasePlugin, IPluginConfig<AFKManagerConfig>
                 continue;
 
             #region AFK Time
-            if (player is { LifeState: (byte)LifeState_t.LIFE_ALIVE, Team: CsTeam.Terrorist or CsTeam.CounterTerrorist })
+
+            if (playersCount >= Config.AfkKickMinPlayers)
             {
-                var playerFlags = player.Pawn.Value!.Flags;
+                if (player is { LifeState: (byte)LifeState_t.LIFE_ALIVE, Team: CsTeam.Terrorist or CsTeam.CounterTerrorist })
+                {
+                    var playerFlags = player.Pawn.Value!.Flags;
 
-                if ((playerFlags & ((uint)PlayerFlags.FL_ONGROUND | (uint)PlayerFlags.FL_FROZEN)) != (uint)PlayerFlags.FL_ONGROUND)
-                    continue;
+                    if ((playerFlags & ((uint)PlayerFlags.FL_ONGROUND | (uint)PlayerFlags.FL_FROZEN)) != (uint)PlayerFlags.FL_ONGROUND)
+                        continue;
 
-                bool isPressingKey = player.Buttons.HasFlag(PlayerButtons.Attack)
+                    bool isPressingKey = player.Buttons.HasFlag(PlayerButtons.Attack)
                     || player.Buttons.HasFlag(PlayerButtons.Jump)
                     || player.Buttons.HasFlag(PlayerButtons.Duck)
                     || player.Buttons.HasFlag(PlayerButtons.Forward)
@@ -171,75 +174,75 @@ public class AFKManager : BasePlugin, IPluginConfig<AFKManagerConfig>
                     || player.Buttons.HasFlag(PlayerButtons.Speed)
                     || player.Buttons.HasFlag(PlayerButtons.Walk);
 
-                if (isPressingKey)
-                {
-                    data.AfkTime = 0;
-                    if (data.AfkWarningCount > 0)
+                    if (isPressingKey)
                     {
-                        data.AfkWarningCount = 0;
+                        data.AfkTime = 0;
+                        if (data.AfkWarningCount > 0)
+                        {
+                            data.AfkWarningCount = 0;
+                        }
+                        continue;
+                    }
+
+                    if (Config.AfkPunishAfterWarnings != 0
+                    && !(Config.AfkSkipFlag.Count >= 1 && AdminManager.PlayerHasPermissions(player, Config.AfkSkipFlag.ToArray())))
+                    {
+                        data.AfkTime += Config.Timer;
+
+                        if (data.AfkTime >= Config.AfkWarnInterval)
+                        {
+                            data.AfkWarningCount++;
+                            if (data.AfkWarningCount >= Config.AfkPunishAfterWarnings)
+                            {
+                                switch (Config.AfkPunishment)
+                                {
+                                    case 0:
+                                        Server.PrintToChatAll(ReplaceVars(player, Localizer["ChatKillMessage"].Value));
+                                        player.Pawn.Value?.CommitSuicide(false, true);
+                                        break;
+
+                                    case 1:
+                                        Server.PrintToChatAll(ReplaceVars(player, Localizer["ChatMoveMessage"].Value));
+                                        player.Pawn.Value?.CommitSuicide(false, true);
+                                        player.ChangeTeam(CsTeam.Spectator);
+                                        data.MovedByPlugin = true;
+                                        break;
+
+                                    case 2:
+                                        Server.PrintToChatAll(ReplaceVars(player, Localizer["ChatKickMessage"].Value));
+                                        Server.ExecuteCommand($"kickid {player.UserId}");
+                                        break;
+                                }
+
+                                data.AfkWarningCount = 0;
+                                data.AfkTime = 0;
+                            }
+                            else
+                            {
+                                switch (Config.AfkPunishment)
+                                {
+                                    case 0:
+                                        player.PrintToChat(ReplaceVars(player, Localizer["ChatWarningKillMessage"].Value, Config.AfkPunishAfterWarnings * Config.AfkWarnInterval - data.AfkWarningCount * Config.AfkWarnInterval));
+                                        break;
+
+                                    case 1:
+                                        player.PrintToChat(ReplaceVars(player, Localizer["ChatWarningMoveMessage"].Value, Config.AfkPunishAfterWarnings * Config.AfkWarnInterval - data.AfkWarningCount * Config.AfkWarnInterval));
+                                        break;
+
+                                    case 2:
+                                        player.PrintToChat(ReplaceVars(player, Localizer["ChatWarningKickMessage"].Value, Config.AfkPunishAfterWarnings * Config.AfkWarnInterval - data.AfkWarningCount * Config.AfkWarnInterval));
+                                        break;
+                                }
+
+                                if (!string.IsNullOrEmpty(Config.PlaySoundName))
+                                    player.ExecuteClientCommand($"play {Config.PlaySoundName}");
+
+                                data.AfkTime = 0;
+                            }
+                        }
                     }
                     continue;
                 }
-
-                if (Config.AfkPunishAfterWarnings != 0
-                    && !(Config.AfkSkipFlag.Count >= 1 && AdminManager.PlayerHasPermissions(player, Config.AfkSkipFlag.ToArray())))
-                {
-                    data.AfkTime += Config.Timer;
-
-                    if (data.AfkTime >= Config.AfkWarnInterval)
-                    {
-                        data.AfkWarningCount++;
-                        if (data.AfkWarningCount >= Config.AfkPunishAfterWarnings)
-                        {
-                            switch (Config.AfkPunishment)
-                            {
-                                case 0:
-                                    Server.PrintToChatAll(ReplaceVars(player, Localizer["ChatKillMessage"].Value));
-                                    player.Pawn.Value?.CommitSuicide(false, true);
-                                    break;
-
-                                case 1:
-                                    Server.PrintToChatAll(ReplaceVars(player, Localizer["ChatMoveMessage"].Value));
-                                    player.Pawn.Value?.CommitSuicide(false, true);
-                                    player.ChangeTeam(CsTeam.Spectator);
-                                    data.MovedByPlugin = true;
-                                    break;
-
-                                case 2:
-                                    Server.PrintToChatAll(ReplaceVars(player, Localizer["ChatKickMessage"].Value));
-                                    Server.ExecuteCommand($"kickid {player.UserId}");
-                                    break;
-                            }
-
-                            data.AfkWarningCount = 0;
-                            data.AfkTime = 0;
-                        }
-                        else
-                        {
-                            switch (Config.AfkPunishment)
-                            {
-                                case 0:
-                                    player.PrintToChat(ReplaceVars(player, Localizer["ChatWarningKillMessage"].Value, Config.AfkPunishAfterWarnings * Config.AfkWarnInterval - data.AfkWarningCount * Config.AfkWarnInterval));
-                                    break;
-
-                                case 1:
-                                    player.PrintToChat(ReplaceVars(player, Localizer["ChatWarningMoveMessage"].Value, Config.AfkPunishAfterWarnings * Config.AfkWarnInterval - data.AfkWarningCount * Config.AfkWarnInterval));
-                                    break;
-
-                                case 2:
-                                    player.PrintToChat(ReplaceVars(player, Localizer["ChatWarningKickMessage"].Value, Config.AfkPunishAfterWarnings * Config.AfkWarnInterval - data.AfkWarningCount * Config.AfkWarnInterval));
-                                    break;
-                            }
-
-                            if (!string.IsNullOrEmpty(Config.PlaySoundName))
-                                player.ExecuteClientCommand($"play {Config.PlaySoundName}");
-
-                            data.AfkTime = 0;
-                        }
-                    }
-                }
-
-                continue;
             }
             #endregion
 
