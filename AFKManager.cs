@@ -11,9 +11,9 @@ namespace AFKManager;
 public class AFKManager : BasePlugin, IPluginConfig<AFKManagerConfig>
 {
     #region definitions
-    public override string ModuleAuthor => "luca.uy (forked by NiGHT)";
+    public override string ModuleAuthor => "luca.uy (forked from NiGHT)";
     public override string ModuleName => "AFK Manager";
-    public override string ModuleVersion => "1.0.5";
+    public override string ModuleVersion => "1.0.6";
 
     public required AFKManagerConfig Config { get; set; }
     private CCSGameRules? _gGameRulesProxy;
@@ -153,10 +153,14 @@ public class AFKManager : BasePlugin, IPluginConfig<AFKManagerConfig>
             {
                 if (player is { LifeState: (byte)LifeState_t.LIFE_ALIVE, Team: CsTeam.Terrorist or CsTeam.CounterTerrorist })
                 {
-                    var playerFlags = player.Pawn.Value!.Flags;
+                    Utils.DebugMessage($"[AFK DEBUG] Checking player {player.PlayerName} (Team: {player.Team})");
 
+                    var playerFlags = player.Pawn.Value!.Flags;
                     if ((playerFlags & ((uint)PlayerFlags.FL_ONGROUND | (uint)PlayerFlags.FL_FROZEN)) != (uint)PlayerFlags.FL_ONGROUND)
+                    {
+                        Utils.DebugMessage($"[AFK DEBUG] Skipping - Player not on ground or frozen (Flags: {playerFlags})");
                         continue;
+                    }
 
                     bool isPressingKey = player.Buttons.HasFlag(PlayerButtons.Attack)
                     || player.Buttons.HasFlag(PlayerButtons.Jump)
@@ -174,8 +178,11 @@ public class AFKManager : BasePlugin, IPluginConfig<AFKManagerConfig>
                     || player.Buttons.HasFlag(PlayerButtons.Speed)
                     || player.Buttons.HasFlag(PlayerButtons.Walk);
 
+                    Utils.DebugMessage($"[AFK DEBUG] Player {player.PlayerName} Buttons: {player.Buttons}, PressingKey: {isPressingKey}");
+
                     if (isPressingKey)
                     {
+                        Utils.DebugMessage($"[AFK DEBUG] Player active - Resetting counters (Was: Time={data.AfkTime}, Warnings={data.AfkWarningCount})");
                         data.AfkTime = 0;
                         if (data.AfkWarningCount > 0)
                         {
@@ -185,29 +192,31 @@ public class AFKManager : BasePlugin, IPluginConfig<AFKManagerConfig>
                     }
 
                     if (Config.AfkPunishAfterWarnings != 0
-                    && !(Config.AfkSkipFlag.Count >= 1 && AdminManager.PlayerHasPermissions(player, Config.AfkSkipFlag.ToArray())))
+                        && !(Config.AfkSkipFlag.Count >= 1 && AdminManager.PlayerHasPermissions(player, Config.AfkSkipFlag.ToArray())))
                     {
                         data.AfkTime += Config.Timer;
+                        Utils.DebugMessage($"[AFK DEBUG] Player inactive - Added {Config.Timer}s (Total: {data.AfkTime}/{Config.AfkWarnInterval})");
 
                         if (data.AfkTime >= Config.AfkWarnInterval)
                         {
                             data.AfkWarningCount++;
+                            Utils.DebugMessage($"[AFK DEBUG] Warning #{data.AfkWarningCount}/{Config.AfkPunishAfterWarnings}");
+
                             if (data.AfkWarningCount >= Config.AfkPunishAfterWarnings)
                             {
+                                Utils.DebugMessage($"[AFK DEBUG] Applying punishment {Config.AfkPunishment} to player");
                                 switch (Config.AfkPunishment)
                                 {
                                     case 0:
                                         Server.PrintToChatAll(ReplaceVars(player, Localizer["ChatKillMessage"].Value));
                                         player.Pawn.Value?.CommitSuicide(false, true);
                                         break;
-
                                     case 1:
                                         Server.PrintToChatAll(ReplaceVars(player, Localizer["ChatMoveMessage"].Value));
                                         player.Pawn.Value?.CommitSuicide(false, true);
                                         player.ChangeTeam(CsTeam.Spectator);
                                         data.MovedByPlugin = true;
                                         break;
-
                                     case 2:
                                         Server.PrintToChatAll(ReplaceVars(player, Localizer["ChatKickMessage"].Value));
                                         Server.ExecuteCommand($"kickid {player.UserId}");
@@ -219,23 +228,28 @@ public class AFKManager : BasePlugin, IPluginConfig<AFKManagerConfig>
                             }
                             else
                             {
+                                Utils.DebugMessage($"[AFK DEBUG] Sending warning to player");
                                 switch (Config.AfkPunishment)
                                 {
                                     case 0:
-                                        player.PrintToChat(ReplaceVars(player, Localizer["ChatWarningKillMessage"].Value, Config.AfkPunishAfterWarnings * Config.AfkWarnInterval - data.AfkWarningCount * Config.AfkWarnInterval));
+                                        player.PrintToChat(ReplaceVars(player, Localizer["ChatWarningKillMessage"].Value,
+                                            Config.AfkPunishAfterWarnings * Config.AfkWarnInterval - data.AfkWarningCount * Config.AfkWarnInterval));
                                         break;
-
                                     case 1:
-                                        player.PrintToChat(ReplaceVars(player, Localizer["ChatWarningMoveMessage"].Value, Config.AfkPunishAfterWarnings * Config.AfkWarnInterval - data.AfkWarningCount * Config.AfkWarnInterval));
+                                        player.PrintToChat(ReplaceVars(player, Localizer["ChatWarningMoveMessage"].Value,
+                                            Config.AfkPunishAfterWarnings * Config.AfkWarnInterval - data.AfkWarningCount * Config.AfkWarnInterval));
                                         break;
-
                                     case 2:
-                                        player.PrintToChat(ReplaceVars(player, Localizer["ChatWarningKickMessage"].Value, Config.AfkPunishAfterWarnings * Config.AfkWarnInterval - data.AfkWarningCount * Config.AfkWarnInterval));
+                                        player.PrintToChat(ReplaceVars(player, Localizer["ChatWarningKickMessage"].Value,
+                                            Config.AfkPunishAfterWarnings * Config.AfkWarnInterval - data.AfkWarningCount * Config.AfkWarnInterval));
                                         break;
                                 }
 
                                 if (!string.IsNullOrEmpty(Config.PlaySoundName))
+                                {
+                                    Utils.DebugMessage($"[AFK DEBUG] Playing sound: {Config.PlaySoundName}");
                                     player.ExecuteClientCommand($"play {Config.PlaySoundName}");
+                                }
 
                                 data.AfkTime = 0;
                             }
@@ -244,54 +258,73 @@ public class AFKManager : BasePlugin, IPluginConfig<AFKManagerConfig>
                     continue;
                 }
             }
+
             #endregion
 
             #region SPEC Time
 
-            if (Config.SpecKickAfterWarnings != 0
-                && player.TeamNum == 1
-                && playersCount >= Config.SpecKickMinPlayers)
+            if (Config.SpecKickAfterWarnings != 0 && player.TeamNum == 1 && playersCount >= Config.SpecKickMinPlayers)
             {
-                if ((Config.SpecKickOnlyMovedByPlugin && !data.MovedByPlugin)
-                    || (Config.SpecSkipFlag.Count >= 1 && AdminManager.PlayerHasPermissions(player, Config.SpecSkipFlag.ToArray())))
-                    continue;
+                Utils.DebugMessage($"[SPEC DEBUG] Checking spectator {player.PlayerName}");
 
-                if (!player.Buttons.HasFlag(PlayerButtons.Attack)
-                    && !player.Buttons.HasFlag(PlayerButtons.Jump)
-                    && !player.Buttons.HasFlag(PlayerButtons.Duck)
-                    && !player.Buttons.HasFlag(PlayerButtons.Forward)
-                    && !player.Buttons.HasFlag(PlayerButtons.Back)
-                    && !player.Buttons.HasFlag(PlayerButtons.Use)
-                    && !player.Buttons.HasFlag(PlayerButtons.Left)
-                    && !player.Buttons.HasFlag(PlayerButtons.Right)
-                    && !player.Buttons.HasFlag(PlayerButtons.Moveleft)
-                    && !player.Buttons.HasFlag(PlayerButtons.Moveright)
-                    && !player.Buttons.HasFlag(PlayerButtons.Attack2)
-                    && !player.Buttons.HasFlag(PlayerButtons.Run)
-                    && !player.Buttons.HasFlag(PlayerButtons.Reload)
-                    && !player.Buttons.HasFlag(PlayerButtons.Speed)
-                    && !player.Buttons.HasFlag(PlayerButtons.Walk))
+                if (Config.SpecKickOnlyMovedByPlugin && !data.MovedByPlugin)
                 {
+                    Utils.DebugMessage($"[SPEC DEBUG] Skipping - Player not moved by plugin");
+                    continue;
+                }
+
+                if (Config.SpecSkipFlag.Count >= 1 && AdminManager.PlayerHasPermissions(player, Config.SpecSkipFlag.ToArray()))
+                {
+                    Utils.DebugMessage($"[SPEC DEBUG] Skipping - Player has special permissions");
+                    continue;
+                }
+
+                bool isSpectPressingKey = player.Buttons.HasFlag(PlayerButtons.Attack)
+                    || player.Buttons.HasFlag(PlayerButtons.Jump)
+                    || player.Buttons.HasFlag(PlayerButtons.Duck)
+                    || player.Buttons.HasFlag(PlayerButtons.Forward)
+                    || player.Buttons.HasFlag(PlayerButtons.Back)
+                    || player.Buttons.HasFlag(PlayerButtons.Use)
+                    || player.Buttons.HasFlag(PlayerButtons.Left)
+                    || player.Buttons.HasFlag(PlayerButtons.Right)
+                    || player.Buttons.HasFlag(PlayerButtons.Moveleft)
+                    || player.Buttons.HasFlag(PlayerButtons.Moveright)
+                    || player.Buttons.HasFlag(PlayerButtons.Attack2)
+                    || player.Buttons.HasFlag(PlayerButtons.Run)
+                    || player.Buttons.HasFlag(PlayerButtons.Reload)
+                    || player.Buttons.HasFlag(PlayerButtons.Speed)
+                    || player.Buttons.HasFlag(PlayerButtons.Walk);
+
+                Utils.DebugMessage($"[SPEC DEBUG] Player {player.PlayerName} Buttons: {player.Buttons}, PressingKey: {isSpectPressingKey}");
+
+                if (isSpectPressingKey)
+                {
+                    Utils.DebugMessage($"[SPEC DEBUG] Spectator active - Resetting counters (Was: Time={data.SpecAfkTime}, Warnings={data.SpecWarningCount})");
                     data.SpecAfkTime = 0;
                     data.SpecWarningCount = 0;
                     continue;
                 }
 
                 data.SpecAfkTime += Config.Timer;
+                Utils.DebugMessage($"[SPEC DEBUG] Spectator inactive - Added {Config.Timer}s (Total: {data.SpecAfkTime}/{Config.SpecWarnInterval})");
 
                 if (data.SpecAfkTime >= Config.SpecWarnInterval)
                 {
-                    if (data.SpecWarningCount == Config.SpecKickAfterWarnings)
+                    data.SpecWarningCount++;
+                    Utils.DebugMessage($"[SPEC DEBUG] Warning #{data.SpecWarningCount}/{Config.SpecKickAfterWarnings}");
+
+                    if (data.SpecWarningCount >= Config.SpecKickAfterWarnings)
                     {
+                        Utils.DebugMessage($"[SPEC DEBUG] Kicking spectator");
                         Server.PrintToChatAll(ReplaceVars(player, Localizer["ChatKickMessage"].Value));
                         Server.ExecuteCommand($"kickid {player.UserId}");
 
                         data.SpecWarningCount = 0;
                         data.SpecAfkTime = 0;
-
                         continue;
                     }
 
+                    Utils.DebugMessage($"[SPEC DEBUG] Sending warning to spectator");
                     player.PrintToChat(ReplaceVars(player, Localizer["ChatWarningKickMessage"].Value,
                         Config.SpecKickAfterWarnings * Config.SpecWarnInterval - data.SpecWarningCount * Config.SpecWarnInterval));
 
@@ -301,7 +334,6 @@ public class AFKManager : BasePlugin, IPluginConfig<AFKManagerConfig>
             }
 
             #endregion
-
         }
     }
 
