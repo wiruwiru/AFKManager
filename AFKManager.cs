@@ -273,9 +273,9 @@ public class AFKManager : BasePlugin, IPluginConfig<AFKManagerConfig>
                     continue;
                 }
 
-                if (Config.SpecKickAfterWarnings != 0 && !(Config.SpecSkipFlag.Count >= 1 && AdminManager.PlayerHasPermissions(player, Config.SpecSkipFlag.ToArray())))
+                if (Config.SpecSkipFlag.Count >= 1 && AdminManager.PlayerHasPermissions(player, Config.SpecSkipFlag.ToArray()))
                 {
-                    Utils.DebugMessage($"[SPEC DEBUG] Skipping - Player has special permissions");
+                    Utils.DebugMessage($"[SPEC DEBUG] Skipping - {player.PlayerName} has special permissions: {string.Join(", ", Config.SpecSkipFlag)}");
                     continue;
                 }
 
