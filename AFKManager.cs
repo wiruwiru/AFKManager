@@ -13,7 +13,7 @@ public class AFKManager : BasePlugin, IPluginConfig<AFKManagerConfig>
     #region definitions
     public override string ModuleAuthor => "luca.uy (forked from NiGHT)";
     public override string ModuleName => "AFK Manager";
-    public override string ModuleVersion => "1.0.7";
+    public override string ModuleVersion => "1.0.8";
 
     public required AFKManagerConfig Config { get; set; }
     private CCSGameRules? _gGameRulesProxy;
@@ -192,8 +192,7 @@ public class AFKManager : BasePlugin, IPluginConfig<AFKManagerConfig>
                         continue;
                     }
 
-                    if (Config.AfkPunishAfterWarnings != 0
-                        && !(Config.AfkSkipFlag.Count >= 1 && AdminManager.PlayerHasPermissions(player, Config.AfkSkipFlag.ToArray())))
+                    if (Config.AfkPunishAfterWarnings != 0 && !(Config.AfkSkipFlag.Count >= 1 && AdminManager.PlayerHasPermissions(player, Config.AfkSkipFlag.ToArray())))
                     {
                         data.AfkTime += Config.Timer;
                         Utils.DebugMessage($"[AFK DEBUG] Player inactive - Added {Config.Timer}s (Total: {data.AfkTime}/{Config.AfkWarnInterval})");
@@ -274,7 +273,7 @@ public class AFKManager : BasePlugin, IPluginConfig<AFKManagerConfig>
                     continue;
                 }
 
-                if (Config.SpecSkipFlag.Count >= 1 && AdminManager.PlayerHasPermissions(player, Config.SpecSkipFlag.ToArray()))
+                if (Config.SpecKickAfterWarnings != 0 && !(Config.SpecSkipFlag.Count >= 1 && AdminManager.PlayerHasPermissions(player, Config.SpecSkipFlag.ToArray())))
                 {
                     Utils.DebugMessage($"[SPEC DEBUG] Skipping - Player has special permissions");
                     continue;
