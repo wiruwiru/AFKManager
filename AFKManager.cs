@@ -10,10 +10,9 @@ namespace AFKManager;
 
 public class AFKManager : BasePlugin, IPluginConfig<AFKManagerConfig>
 {
-    #region definitions
     public override string ModuleAuthor => "luca.uy (forked from NiGHT)";
     public override string ModuleName => "AFK Manager";
-    public override string ModuleVersion => "1.0.8";
+    public override string ModuleVersion => "1.0.9";
 
     public required AFKManagerConfig Config { get; set; }
     private CCSGameRules? _gGameRulesProxy;
@@ -67,7 +66,6 @@ public class AFKManager : BasePlugin, IPluginConfig<AFKManagerConfig>
     }
 
     private readonly Dictionary<uint, PlayerInfo> _gPlayerInfo = new();
-    #endregion
 
     public override void Load(bool hotReload)
     {
@@ -87,7 +85,6 @@ public class AFKManager : BasePlugin, IPluginConfig<AFKManagerConfig>
             _gPlayerInfo.Clear();
         });
 
-        #region OnClientConnected
         RegisterListener<Listeners.OnClientConnected>(playerSlot =>
         {
             var finalSlot = (uint)playerSlot + 1;
@@ -102,8 +99,7 @@ public class AFKManager : BasePlugin, IPluginConfig<AFKManagerConfig>
         {
             _gPlayerInfo.Remove((uint)playerSlot + 1);
         });
-        #endregion
-        #region hotReload
+
         if (hotReload)
         {
             AddTimer(1.0f, () =>
@@ -125,7 +121,7 @@ public class AFKManager : BasePlugin, IPluginConfig<AFKManagerConfig>
                         throw new Exception("Failed to find game rules proxy entity on hotReload.");
             }, TimerFlags.STOP_ON_MAPCHANGE);
         }
-        #endregion
+
         AddCommandListener("spec_mode", OnCommandListener);
         AddCommandListener("spec_next", OnCommandListener);
     }
@@ -137,22 +133,17 @@ public class AFKManager : BasePlugin, IPluginConfig<AFKManagerConfig>
 
     private void AfkTimer_Callback()
     {
-        if (_gGameRulesProxy == null || _gGameRulesProxy.FreezePeriod || (Config.SkipWarmup && _gGameRulesProxy.WarmupPeriod))
-            return;
-
+        if (_gGameRulesProxy == null || _gGameRulesProxy.FreezePeriod || (Config.SkipWarmup && _gGameRulesProxy.WarmupPeriod)) return;
         var players = Utilities.GetPlayers().Where(x => x is { IsBot: false, Connected: PlayerConnectedState.PlayerConnected }).ToList();
         var playersCount = players.Count;
 
         foreach (var player in players)
         {
-            if (player.ControllingBot || !_gPlayerInfo.TryGetValue(player.Index, out var data))
-                continue;
-
-            #region AFK Time
+            if (player.ControllingBot || !_gPlayerInfo.TryGetValue(player.Index, out var data)) continue;
 
             if (playersCount >= Config.AfkKickMinPlayers)
             {
-                if (player is { LifeState: (byte)LifeState_t.LIFE_ALIVE, Team: CsTeam.Terrorist or CsTeam.CounterTerrorist })
+                if (player is { Team: CsTeam.Terrorist or CsTeam.CounterTerrorist })
                 {
                     Utils.DebugMessage($"[AFK DEBUG] Checking player {player.PlayerName} (Team: {player.Team})");
 
@@ -163,22 +154,7 @@ public class AFKManager : BasePlugin, IPluginConfig<AFKManagerConfig>
                         continue;
                     }
 
-                    bool isPressingKey = player.Buttons.HasFlag(PlayerButtons.Attack)
-                    || player.Buttons.HasFlag(PlayerButtons.Jump)
-                    || player.Buttons.HasFlag(PlayerButtons.Duck)
-                    || player.Buttons.HasFlag(PlayerButtons.Forward)
-                    || player.Buttons.HasFlag(PlayerButtons.Back)
-                    || player.Buttons.HasFlag(PlayerButtons.Use)
-                    || player.Buttons.HasFlag(PlayerButtons.Left)
-                    || player.Buttons.HasFlag(PlayerButtons.Right)
-                    || player.Buttons.HasFlag(PlayerButtons.Moveleft)
-                    || player.Buttons.HasFlag(PlayerButtons.Moveright)
-                    || player.Buttons.HasFlag(PlayerButtons.Attack2)
-                    || player.Buttons.HasFlag(PlayerButtons.Run)
-                    || player.Buttons.HasFlag(PlayerButtons.Reload)
-                    || player.Buttons.HasFlag(PlayerButtons.Speed)
-                    || player.Buttons.HasFlag(PlayerButtons.Walk);
-
+                    bool isPressingKey = Utils.IsPressingAnyKey(player);
                     Utils.DebugMessage($"[AFK DEBUG] Player {player.PlayerName} Buttons: {player.Buttons}, PressingKey: {isPressingKey}");
 
                     if (isPressingKey)
@@ -259,10 +235,6 @@ public class AFKManager : BasePlugin, IPluginConfig<AFKManagerConfig>
                 }
             }
 
-            #endregion
-
-            #region SPEC Time
-
             if (Config.SpecKickAfterWarnings != 0 && player.TeamNum == 1 && playersCount >= Config.SpecKickMinPlayers)
             {
                 Utils.DebugMessage($"[SPEC DEBUG] Checking spectator {player.PlayerName}");
@@ -273,28 +245,26 @@ public class AFKManager : BasePlugin, IPluginConfig<AFKManagerConfig>
                     continue;
                 }
 
-                if (Config.SpecSkipFlag.Count >= 1 && AdminManager.PlayerHasPermissions(player, Config.SpecSkipFlag.ToArray()))
+                if (Config.SpecSkipFlag.Count >= 1)
                 {
-                    Utils.DebugMessage($"[SPEC DEBUG] Skipping - {player.PlayerName} has special permissions: {string.Join(", ", Config.SpecSkipFlag)}");
-                    continue;
+                    var adminData = AdminManager.GetPlayerAdminData(player);
+                    var allFlags = adminData?.Flags?.SelectMany(kv => kv.Value.Select(flag => $"{kv.Key}:{flag}")).ToList() ?? new List<string>();
+                    var allGroups = adminData?.Groups?.ToList() ?? new List<string>();
+
+                    Utils.DebugMessage($"[PERM DEBUG] Player: {player.PlayerName} | " +
+                                      $"All Flags: {string.Join(", ", allFlags)} | " +
+                                      $"All Groups: {string.Join(", ", allGroups)} | " +
+                                      $"SpecSkipFlag: {string.Join(", ", Config.SpecSkipFlag)}");
+
+                    var hasPermission = Config.SpecSkipFlag.Any(flag => AdminManager.PlayerHasPermissions(player, flag) || (adminData?.Groups?.Contains(flag) == true));
+                    if (hasPermission)
+                    {
+                        Utils.DebugMessage($"[SPEC DEBUG] Skipping - Player has required permissions");
+                        continue;
+                    }
                 }
 
-                bool isSpectPressingKey = player.Buttons.HasFlag(PlayerButtons.Attack)
-                    || player.Buttons.HasFlag(PlayerButtons.Jump)
-                    || player.Buttons.HasFlag(PlayerButtons.Duck)
-                    || player.Buttons.HasFlag(PlayerButtons.Forward)
-                    || player.Buttons.HasFlag(PlayerButtons.Back)
-                    || player.Buttons.HasFlag(PlayerButtons.Use)
-                    || player.Buttons.HasFlag(PlayerButtons.Left)
-                    || player.Buttons.HasFlag(PlayerButtons.Right)
-                    || player.Buttons.HasFlag(PlayerButtons.Moveleft)
-                    || player.Buttons.HasFlag(PlayerButtons.Moveright)
-                    || player.Buttons.HasFlag(PlayerButtons.Attack2)
-                    || player.Buttons.HasFlag(PlayerButtons.Run)
-                    || player.Buttons.HasFlag(PlayerButtons.Reload)
-                    || player.Buttons.HasFlag(PlayerButtons.Speed)
-                    || player.Buttons.HasFlag(PlayerButtons.Walk);
-
+                bool isSpectPressingKey = Utils.IsPressingAnyKey(player);
                 Utils.DebugMessage($"[SPEC DEBUG] Player {player.PlayerName} Buttons: {player.Buttons}, PressingKey: {isSpectPressingKey}");
 
                 if (isSpectPressingKey)
@@ -333,27 +303,12 @@ public class AFKManager : BasePlugin, IPluginConfig<AFKManagerConfig>
                 }
             }
 
-            #endregion
         }
-    }
-
-    private static string GetTeamColor(CsTeam team)
-    {
-        return team switch
-        {
-            CsTeam.Spectator => ChatColors.Grey.ToString(),
-            CsTeam.Terrorist => ChatColors.Red.ToString(),
-            CsTeam.CounterTerrorist => ChatColors.Blue.ToString(),
-            _ => ChatColors.Default.ToString()
-        };
     }
 
     private string ReplaceVars(CCSPlayerController player, string message, float timeAmount = 0.0f)
     {
         return Localizer["ChatPrefix"] + message.Replace("{playerName}", player.PlayerName)
-                      .Replace("{teamColor}", GetTeamColor(player.Team))
-                      .Replace("{weaponName}", player.PlayerPawn?.Value?.WeaponServices?.ActiveWeapon?.Value?.DesignerName ?? "Unknown")
-                      .Replace("{timeAmount}", $"{timeAmount:F1}")
-                      .Replace("{zoneName}", player.PlayerPawn?.Value?.LastPlaceName ?? "Unknown");
+                                                .Replace("{timeAmount}", $"{timeAmount:F1}");
     }
 }
