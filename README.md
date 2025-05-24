@@ -17,18 +17,20 @@ The configuration file will be automatically generated when the plugin is first 
 
 | Parameter                | Description                                                                                       |
 |--------------------------|---------------------------------------------------------------------------------------------------|
-| `AfkPunishAfterWarnings` | Number of warnings to issue before applying the punishment type (set to 0 to disable AFK feature). |
+| `AfkPunishAfterWarnings` | Number of warnings to issue before applying the punishment type (set to 0 to disable AFK feature).|
 | `AfkPunishment`          | Punishment type (0 - kill, 1 - kill + move to spectator, 2 - kick).                               |
 | `AfkWarnInterval`        | Issue a warning every X seconds for AFK.                                                          |
 | `SpecWarnInterval`       | Issue a warning every X seconds for AFK while in spectator mode.                                  |
-| `SpecKickAfterWarnings`  | Kick the player after X warnings are issued (set to 0 to disable).                               |
+| `SpecKickAfterWarnings`  | Kick the player after X warnings are issued (set to 0 to disable).                                |
 | `SpecKickMinPlayers`     | Minimum number of players required to kick.                                                       |
-| `SpecKickOnlyMovedByPlugin` | Only check players in spectator mode who were moved by AFK Manager.                             |
+| `SpecKickOnlyMovedByPlugin` | Only check players in spectator mode who were moved by AFK Manager.                            |
 | `SpecSkipFlag`           | Skip players in spectator mode with this flag during AFK verification.                            |
 | `AfkSkipFlag`            | Skip players with this flag during AFK verification.                                              |
 | `PlaySoundName`          | Play a sound after a warning is issued (leave empty to disable).                                  |
 | `SkipWarmup`             | Skip checks during warmup.                                                                        |
 | `Timer`                  | Adjust the timer for player checks (recommended to set to 1 second).                              |
+| `isCSSPanel`             | Enable this if you are using CSSPanel; otherwise skip flags may not work correctly.               |
+| `EnableDebug`            | Enable debug messages in the console for troubleshooting purposes.                                |
 
 ## Configuration Example
 Here is an example configuration file:
@@ -51,6 +53,8 @@ Here is an example configuration file:
   "PlaySoundName": "ui/panorama/popup_reveal_01",
   "SkipWarmup": false,
   "Timer": 1,
+  "isCSSPanel": false,
+  "EnableDebug": false,
   "ConfigVersion": 1
 }
 ```

@@ -1,6 +1,6 @@
 using CounterStrikeSharp.API.Core;
 
-namespace AFKManager;
+namespace AFKManager.Config;
 
 public class AFKManagerConfig : BasePluginConfig
 {
@@ -17,5 +17,6 @@ public class AFKManagerConfig : BasePluginConfig
     public string PlaySoundName { get; set; } = "sound/ui/beep22.wav";
     public bool SkipWarmup { get; set; } = false;
     public float Timer { get; set; } = 1.0f;
+    public bool isCSSPanel { get; set; } = false;
     public bool EnableDebug { get; set; } = false;
 }
